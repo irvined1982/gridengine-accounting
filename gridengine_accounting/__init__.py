@@ -35,7 +35,7 @@ class AccountEntry:
 		lines=line.split(":")
 		if len(lines)!=45:
 			raise ValueError("Line not of correct format")
-		self._queue_name=lines.pop(0)
+		self._qname=lines.pop(0)
 		self._hostname=lines.pop(0)
 		self._group=lines.pop(0)
 		self._owner=lines.pop(0)
@@ -95,12 +95,12 @@ class AccountEntry:
 	@property
 	def queue_name(self):
 		'''Name of the cluster queue in which the job has run.'''
-		return u"%s" % self._queue_name
+		return u"%s" % self.qname
 
 	@property
 	def qname(self):
 		'''Name of the cluster queue in which the job has run.'''
-		return self.queue_name
+		return self._qname
 
 	@property
 	def hostname(self):

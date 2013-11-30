@@ -46,7 +46,7 @@ class AccountEntry:
 		self._submission_time=int(lines.pop(0))
 		self._start_time=int(lines.pop(0))
 		self._end_time=int(lines.pop(0))
-		self._failed=lines.pop(0)
+		self._failed=int(lines.pop(0))
 		self._exit_status=int(lines.pop(0))
 		self._ru_wallclock=int(lines.pop(0))
 		self._ru_utime=float(lines.pop(0))

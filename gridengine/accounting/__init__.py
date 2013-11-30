@@ -14,6 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with gridengine-accounting.  If not, see <http://www.gnu.org/licenses/>.
+import json
 
 class AccountFile:
 	def __init__(self, file_ob):
@@ -321,3 +322,9 @@ For  example:  If a job dies through signal 9 (SIGKILL) then the exit status bec
 	def ar_submission_time(self):
 		'''If  the  job  used  resources of an advance reservation then this field contains the submission time (GMT  unix  time  stamp)  of  the  advance reservation, otherwise the value is "0".'''
 		return  self._ar_submission_time
+	def to_json(self):
+		d={}
+		for k,v in self.__dict__.iteritems():
+			k=k.lstrip("_")
+			d[k]=v
+		return json.dumps(d)

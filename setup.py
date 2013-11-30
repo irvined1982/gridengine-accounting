@@ -23,7 +23,7 @@ setup(
 	author="David Irvine",
 	author_email="irvined@gmail.com",
 	url="https://github.com/irvined1982/gridengine-accounting",
-	packages=["gridengine.accounting"],
+	packages=["gridengine_accounting"],
 	classifiers=[
 		"License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
 		"Natural Language :: English",

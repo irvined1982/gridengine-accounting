@@ -130,8 +130,10 @@ class AccountEntry:
         self._arid = 0  # Not present in Univa UD
         if len(lines) == 45:
             self._arid = int(lines.pop(0))
-
-        self._ar_submission_time = int(lines.pop(0))
+        v=lines.pop(0)
+        print v
+        print type(v)
+        self._ar_submission_time = int(v)
 
     @property
     def queue_name(self):

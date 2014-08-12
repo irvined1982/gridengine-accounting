@@ -35,11 +35,9 @@ class AccountFile:
             fields = line.split(":")
             if len(fields) == 45:
                 try:
-                    int(fields[0])
-                    return AccountEntry(line)
+                    int(fields[0])# standard SGE row doesnt start with int
                 except ValueError:
-                    # standard SGE row....
-                    pass
+                    return AccountEntry(line)
 
             elif len(fields) == 47 and fields[1] == "acct":
                 return AccountEntry(line)

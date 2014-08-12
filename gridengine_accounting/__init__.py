@@ -42,9 +42,11 @@ class AccountFile:
             elif len(fields) == 47 and fields[1] == "acct":
                 fields.pop(0)
                 fields.pop(0)
+                return AccountEntry(":".join(fields))
             elif len(fields) == 39:
                 return AccountEntry(line)
-
+            else:
+                print "Invalid Row: %d" % len(fields)
 
 class AccountEntry:
     def __init__(self, line):

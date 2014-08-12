@@ -36,13 +36,13 @@ class AccountFile:
             if len(fields) == 45:
                 try:
                     int(fields[0])
+                    return AccountEntry(line)
                 except ValueError:
                     # standard SGE row....
-                    return AccountEntry(line)
+                    pass
+
             elif len(fields) == 47 and fields[1] == "acct":
-                fields.pop(0)
-                fields.pop(0)
-                return AccountEntry(":".join(fields))
+                return AccountEntry(line)
             elif len(fields) == 39:
                 return AccountEntry(line)
             else:
@@ -52,8 +52,11 @@ class AccountEntry:
     def __init__(self, line):
         lines = line.split(":")
 
-        if len(lines) not in [45, 47]:
+        if len(lines) not in [45, 47, 39]:
             raise ValueError("Line not of correct format")
+        if len(lines) == 47: # Remove type and timestime fields.
+            lines.pop(0)
+            lines.pop(0)
         self._qname = lines.pop(0)
         self._hostname = lines.pop(0)
         self._group = lines.pop(0)

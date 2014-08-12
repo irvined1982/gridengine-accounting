@@ -36,7 +36,8 @@ class AccountFile:
 class AccountEntry:
     def __init__(self, line):
         lines = line.split(":")
-        if len(lines) != 45:
+
+        if len(lines) not in [45, 39]:
             raise ValueError("Line not of correct format")
         self._qname = lines.pop(0)
         self._hostname = lines.pop(0)
@@ -50,7 +51,12 @@ class AccountEntry:
         self._start_time = int(lines.pop(0))
         self._end_time = int(lines.pop(0))
         self._failed = int(lines.pop(0))
-        self._exit_status = int(lines.pop(0))
+
+        if len(lines) == 39:
+            self._exit_status=0 # Not present in base for univa UD
+        else:
+            self._exit_status = int(lines.pop(0))
+
         self._ru_wallclock = int(lines.pop(0))
         self._ru_utime = float(lines.pop(0))
         self._ru_stime = float(lines.pop(0))
@@ -83,16 +89,30 @@ class AccountEntry:
         self._cpu = float(lines.pop(0))
         self._mem = float(lines.pop(0))
         self._io = float(lines.pop(0))
+
         self._catagory = lines.pop(0)
         if self._catagory == "NONE":
             self._catagory = None
-        self._iow = float(lines.pop(0))
-        try:
-            self._pe_taskid = int(lines.pop(0))
-        except ValueError:
-            self._pe_taskid = None
-        self._maxvmem = float(lines.pop(0))
-        self._arid = int(lines.pop(0))
+        if len(lines) == 45:
+            self._iow = float(lines.pop(0))
+        else:
+            self._iow = 0.0 # Not present in Univa UD
+
+        self._pe_taskid = None # Not present in Univa UD
+        if len(lines) == 45:
+            try:
+                self._pe_taskid = int(lines.pop(0))
+            except ValueError:
+                pass
+
+        self._maxvmem = 0.0
+        if len(lines) == 45:
+            self._maxvmem = (lines.pop(0))
+
+        self._arid = 0 # Not present in Univa UD
+        if len(lines) == 45:
+            self._arid = int(lines.pop(0))
+
         self._ar_submission_time = int(lines.pop(0))
 
     @property

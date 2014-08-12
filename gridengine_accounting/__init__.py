@@ -46,7 +46,7 @@ class AccountFile:
             elif len(fields) == 39:
                 return AccountEntry(line)
             else:
-                print "Invalid Row Length: %d" % (len(fields), self._row_num)
+                print "Invalid Row Length: %d at line %d" % (len(fields), self._row_num)
 
 class AccountEntry:
     def __init__(self, line):

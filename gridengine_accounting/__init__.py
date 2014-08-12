@@ -40,13 +40,14 @@ class AccountFile:
                     int(fields[0])# standard SGE row doesnt start with int
                 except ValueError:
                     return AccountEntry(line)
-
             elif len(fields) == 47 and fields[1] == "acct":
                 return AccountEntry(line)
             elif len(fields) == 39:
                 return AccountEntry(line)
             else:
-                print "Invalid Row Length: %d at line %d" % (len(fields), self._row_num)
+                if fields[1] == "acct":
+                    print "ERROR: Invalid length of accounting row, this is probably a big deal"
+                print "Unknown Row Type: %d at line %d" % (len(fields), self._row_num)
 
 class AccountEntry:
     def __init__(self, line):

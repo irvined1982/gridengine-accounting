@@ -25,19 +25,32 @@ class AccountFile:
         return self
 
     def next(self):
-        line = self._file_ob.readline()
-        if not line:
-            raise StopIteration
-        while (line.startswith("#")):
+        while True:
             line = self._file_ob.readline()
-        return AccountEntry(line)
+            if not line:
+                raise StopIteration
+            if line.startswith("#"):
+                continue
+
+            fields = line.split(":")
+            if len(fields) == 45:
+                try:
+                    int(fields[0])
+                except ValueError:
+                    # standard SGE row....
+                    return AccountEntry(line)
+            elif len(fields) == 47 and fields[1] == "acct":
+                fields.pop(0)
+                fields.pop(0)
+            elif len(fields) == 39:
+                return AccountEntry(line)
 
 
 class AccountEntry:
     def __init__(self, line):
         lines = line.split(":")
 
-        if len(lines) not in [45, 39]:
+        if len(lines) not in [45, 47]:
             raise ValueError("Line not of correct format")
         self._qname = lines.pop(0)
         self._hostname = lines.pop(0)
@@ -53,7 +66,7 @@ class AccountEntry:
         self._failed = int(lines.pop(0))
 
         if len(lines) == 39:
-            self._exit_status=0 # Not present in base for univa UD
+            self._exit_status = 0  # Not present in base for univa UD
         else:
             self._exit_status = int(lines.pop(0))
 
@@ -96,9 +109,9 @@ class AccountEntry:
         if len(lines) == 45:
             self._iow = float(lines.pop(0))
         else:
-            self._iow = 0.0 # Not present in Univa UD
+            self._iow = 0.0  # Not present in Univa UD
 
-        self._pe_taskid = None # Not present in Univa UD
+        self._pe_taskid = None  # Not present in Univa UD
         if len(lines) == 45:
             try:
                 self._pe_taskid = int(lines.pop(0))
@@ -109,7 +122,7 @@ class AccountEntry:
         if len(lines) == 45:
             self._maxvmem = (lines.pop(0))
 
-        self._arid = 0 # Not present in Univa UD
+        self._arid = 0  # Not present in Univa UD
         if len(lines) == 45:
             self._arid = int(lines.pop(0))
 
@@ -117,104 +130,112 @@ class AccountEntry:
 
     @property
     def queue_name(self):
-        '''Name of the cluster queue in which the job has run.'''
+        """Name of the cluster queue in which the job has run."""
         return u"%s" % self.qname
 
     @property
     def qname(self):
-        '''Name of the cluster queue in which the job has run.'''
+        """Name of the cluster queue in which the job has run."""
         return self._qname
 
     @property
     def hostname(self):
-        '''Name of the execution host.'''
+        """Name of the execution host."""
         return u"%s" % self._hostname
 
     @property
     def host_name(self):
-        '''Name of the execution host.'''
+        """Name of the execution host."""
         return self.hostname
 
     @property
     def group(self):
-        '''The effective group id of the job owner when executing the job.'''
+        """The effective group id of the job owner when executing the job."""
         return u"%s" % self._group
 
     @property
     def owner(self):
-        '''Owner of the Sun Grid Engine job.'''
+        """Owner of the Sun Grid Engine job."""
         return u"%s" % self._owner
 
     @property
     def job_name(self):
-        '''Job name.'''
+        """Job name."""
         return u"%s" % self._job_name
 
     @property
     def job_number(self):
-        '''Job identifier - job number'''
+        """Job identifier - job number"""
         return self._job_number
 
     @property
     def account(self):
-        '''An account string as specified by the qsub(1) or qalter(1) -A option.'''
+        """An account string as specified by the qsub(1) or qalter(1) -A option."""
         return u"%s" % self._account
 
     @property
     def priority(self):
-        '''Priority value assigned to the job corresponding to the priority parameter in the queue configuration (see queue_conf(5)).'''
+        """Priority value assigned to the job corresponding to the priority parameter in the queue configuration
+        (see queue_conf(5))."""
         return self._priority
 
     @property
     def submission_time(self):
-        '''Submission time (GMT unix time stamp).'''
+        """Submission time (GMT unix time stamp)."""
         return self._submission_time
 
     @property
     def start_time(self):
-        '''Start time (GMT unix time stamp).'''
+        """Start time (GMT unix time stamp)."""
         return self._start_time
 
     @property
     def end_time(self):
-        '''End time (GMT unix time stamp).'''
+        """End time (GMT unix time stamp)."""
         return self._end_time
 
     @property
     def failed(self):
-        '''Indicates the problem which occurred in case a job could not be started on the execution host (e.g. because the owner of the job did not have a valid account on that machine). If Sun Grid Engine tries to start a job multiple times, this may lead to multiple  entries  in  the  accounting file corresponding to the same job ID.'''
+        """Indicates the problem which occurred in case a job could not be started on the execution host (e.g. because
+        the owner of the job did not have a valid account on that machine). If Sun Grid Engine tries to start a job
+        multiple times, this may lead to multiple  entries  in  the  accounting file corresponding to the same job
+        ID."""
         return u"%s" % self._failed
 
     @property
     def exit_status(self):
-        '''Exit  status  of  the job script (or Sun Grid Engine specific status in case of certain error conditions).  The exit status  is  determined  by following  the  normal  shell  conventions.   If the command terminates normally the value of the command is its exit status.  However, in  the case  that  the  command exits abnormally, a value of 0200 (octal), 128 (decimal) is added to the value of the command  to  make  up  the  exit status.
+        """Exit  status  of  the job script (or Sun Grid Engine specific status in case of certain error conditions).
+        The exit status  is  determined  by following  the  normal  shell  conventions.   If the command terminates
+        normally the value of the command is its exit status.  However, in  the case  that  the  command exits
+        abnormally, a value of 0200 (octal), 128 (decimal) is added to the value of the command  to  make  up  the
+        exit status.
 
-For  example:  If a job dies through signal 9 (SIGKILL) then the exit status becomes 128 + 9 = 137.'''
+        For  example:  If a job dies through signal 9 (SIGKILL) then the exit status becomes 128 + 9 = 137."""
         return self._exit_status
 
     @property
     def ru_wallclock(self):
-        '''Difference between end_time and start_time (see above)'''
+        """Difference between end_time and start_time (see above)"""
         return self._ru_wallclock
 
     @property
     def ru_utime(self):
-        '''user time used'''
+        """user time used"""
         return self._ru_utime
 
     @property
     def ru_stime(self):
-        '''system time used'''
+        """system time used"""
         return self._ru_stime
 
     @property
     def ru_maxrss(self):
-        '''maximum resident set size'''
+        """maximum resident set size"""
         return self._ru_maxrss
 
     @property
     def ru_ixrss(self):
-        '''integral shared memory size'''
+        """integral shared memory size"""
         return self._ru_ixrss
 
     @property
@@ -223,127 +244,130 @@ For  example:  If a job dies through signal 9 (SIGKILL) then the exit status bec
 
     @property
     def ru_idrss(self):
-        '''integral unshared data size'''
+        """integral unshared data size"""
         return self._ru_idrss
 
     @property
     def ru_isrss(self):
-        '''integral unshared stack size'''
+        """integral unshared stack size"""
         return self._ru_isrss
 
     @property
     def ru_minflt(self):
-        '''page reclaims'''
+        """page reclaims"""
         return self._ru_minflt
 
     @property
     def ru_majflt(self):
-        '''page faults'''
+        """page faults"""
         return self._ru_majflt
 
     @property
     def ru_nswap(self):
-        '''swaps'''
+        """swaps"""
         return self._ru_nswap
 
     @property
     def ru_inblock(self):
-        '''block input operations'''
+        """block input operations"""
         return self._ru_inblock
 
     @property
     def ru_oublock(self):
-        '''block output operations'''
+        """block output operations"""
         return self._ru_oublock
 
     @property
     def ru_msgsnd(self):
-        '''messages sent'''
+        """messages sent"""
         return self._ru_msgsnd
 
     @property
     def ru_msgrcv(self):
-        '''messages received'''
+        """messages received"""
         return self._ru_msgrcv
 
     @property
     def ru_nsignals(self):
-        '''signals received'''
+        """signals received"""
         return self._ru_nsignals
 
     @property
     def ru_nvcsw(self):
-        '''voluntary context switches'''
+        """voluntary context switches"""
         return self._ru_nvcsw
 
     @property
     def ru_nivcsw(self):
-        '''involuntary context switches'''
+        """involuntary context switches"""
         return self._ru_nivcsw
 
     @property
     def project(self):
-        '''The project which was assigned to the job.'''
+        """The project which was assigned to the job."""
         return u"%s" % self._project
 
     @property
     def department(self):
-        '''The department which was assigned to the job.'''
+        """The department which was assigned to the job."""
         return u"%s" % self._department
 
     @property
     def granted_pe(self):
-        '''The parallel environment which was selected for that job.'''
+        """The parallel environment which was selected for that job."""
         return u"%s" % self._granted_pe
 
     @property
     def slots(self):
-        '''The  number of slots which were dispatched to the job by the scheduler.'''
+        """The  number of slots which were dispatched to the job by the scheduler."""
         return self._slots
 
     @property
     def task_number(self):
-        '''Array job task index number.'''
+        """Array job task index number."""
         return self._task_number
 
     @property
     def cpu(self):
-        '''The cpu time usage in seconds.'''
+        """The cpu time usage in seconds."""
         return self._cpu
 
     @property
     def mem(self):
-        '''The integral memory usage in Gbytes cpu seconds.'''
+        """The integral memory usage in Gbytes cpu seconds."""
         return self._mem
 
     @property
     def catagory(self):
-        '''A string specifying the job category.'''
+        """A string specifying the job category."""
         return u"%s" % self._catagory
 
     @property
     def iow(self):
-        '''The io wait time in seconds.'''
+        """The io wait time in seconds."""
         return self._iow
 
     @property
     def pe_taskid(self):
-        '''If this identifier is set the task was part of a parallel job  and  was passed to Sun Grid Engine via the qrsh -inherit interface.'''
+        """If this identifier is set the task was part of a parallel job  and  was passed to Sun Grid Engine via the
+        qrsh -inherit interface."""
         return self._pe_taskid
 
     @property
     def maxvmem(self):
-        '''The maximum vmem size in bytes.'''
+        """The maximum vmem size in bytes."""
         return self._maxvmem
 
     @property
     def arid(self):
-        '''Advance reservation identifier. If the job used resources of an advance reservation then this field contains a positive integer identifier otherwise the value is "0".'''
+        """Advance reservation identifier. If the job used resources of an advance reservation then this field contains
+        a positive integer identifier otherwise the value is "0"."""
         return self._arid
 
     @property
     def ar_submission_time(self):
-        '''If  the  job  used  resources of an advance reservation then this field contains the submission time (GMT  unix  time  stamp)  of  the  advance reservation, otherwise the value is "0".'''
+        """If  the  job  used  resources of an advance reservation then this field contains the submission time (GMT
+        unix  time  stamp)  of  the  advance reservation, otherwise the value is "0"."""
         return self._ar_submission_time
 
     def to_json(self):

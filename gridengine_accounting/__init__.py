@@ -20,12 +20,14 @@ import json
 class AccountFile:
     def __init__(self, file_ob):
         self._file_ob = file_ob
-
+        self._row_num = 0
     def __iter__(self):
         return self
 
+
     def next(self):
         while True:
+            self._row_num += 1
             line = self._file_ob.readline()
             if not line:
                 raise StopIteration
@@ -44,7 +46,7 @@ class AccountFile:
             elif len(fields) == 39:
                 return AccountEntry(line)
             else:
-                print "Invalid Row: %d" % len(fields)
+                print "Invalid Row Length: %d" % (len(fields), self._row_num)
 
 class AccountEntry:
     def __init__(self, line):
@@ -128,7 +130,7 @@ class AccountEntry:
         self._arid = 0  # Not present in Univa UD
         if len(lines) == 45:
             self._arid = int(lines.pop(0))
-        
+
         self._ar_submission_time = float(lines.pop(0))
 
     @property

@@ -54,7 +54,7 @@ class AccountEntry:
     def __init__(self, line):
         lines = line.split(":")
 
-        if len(lines) not in [45, 47, 39]:
+        if len(lines) not in [45, 46, 47, 39]:
             raise ValueError("Line not of correct format")
         if len(lines) == 47:  # Remove type and timestime fields.
             lines.pop(0)
@@ -113,24 +113,24 @@ class AccountEntry:
         self._catagory = lines.pop(0)
         if self._catagory == "NONE":
             self._catagory = None
-        if len(lines) == 45:
+        if len(lines) in [45, 46]:
             self._iow = float(lines.pop(0))
         else:
             self._iow = 0.0  # Not present in Univa UD
 
         self._pe_taskid = None  # Not present in Univa UD
-        if len(lines) == 45:
+        if len(lines) in [45, 46]:
             try:
                 self._pe_taskid = int(lines.pop(0))
             except ValueError:
                 pass
 
         self._maxvmem = 0.0
-        if len(lines) == 45:
+        if len(lines) in [45, 46]:
             self._maxvmem = (lines.pop(0))
 
         self._arid = 0  # Not present in Univa UD
-        if len(lines) == 45:
+        if len(lines) in [45, 46]:
             self._arid = int(lines.pop(0))
 
         self._ar_submission_time = float(lines.pop(0))

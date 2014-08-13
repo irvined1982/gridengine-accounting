@@ -21,9 +21,9 @@ class AccountFile:
     def __init__(self, file_ob):
         self._file_ob = file_ob
         self._row_num = 0
+
     def __iter__(self):
         return self
-
 
     def next(self):
         while True:
@@ -35,9 +35,9 @@ class AccountFile:
                 continue
 
             fields = line.split(":")
-            if len(fields) == 45:
+            if len(fields) in [45, 46]:
                 try:
-                    int(fields[0])# standard SGE row doesnt start with int
+                    int(fields[0])  # standard SGE row doesnt start with int
                 except ValueError:
                     return AccountEntry(line)
             elif len(fields) == 47 and fields[1] == "acct":
@@ -49,13 +49,14 @@ class AccountFile:
                     print "ERROR: Invalid length of accounting row, this is probably a big deal"
                 print "Unknown Row Type: %d at line %d" % (len(fields), self._row_num)
 
+
 class AccountEntry:
     def __init__(self, line):
         lines = line.split(":")
 
         if len(lines) not in [45, 47, 39]:
             raise ValueError("Line not of correct format")
-        if len(lines) == 47: # Remove type and timestime fields.
+        if len(lines) == 47:  # Remove type and timestime fields.
             lines.pop(0)
             lines.pop(0)
         self._qname = lines.pop(0)

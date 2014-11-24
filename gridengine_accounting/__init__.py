@@ -17,7 +17,7 @@
 import json
 
 
-class AccountFile:
+class AccountFile(object):
     def __init__(self, file_ob):
         self._file_ob = file_ob
         self._row_num = 0
@@ -49,6 +49,337 @@ class AccountFile:
                     print "ERROR: Invalid length of accounting row, this is probably a big deal"
                 print "Unknown Row Type: %d at line %d" % (len(fields), self._row_num)
 
+
+class UGEAccountFile(AccountFile):
+    """
+    Iterator that returns a new UGEAccountEntry object for every valid row in an
+    Univa Grid Engine Accounting file.
+
+    Example::
+
+        >>> from gridengine_accounting import UGEAccountFile
+        >>> f = open("ug82_accounting")
+        >>> for ac in UGEAccountFile(f):
+        ...     print ac.job_number
+        [...]
+
+    """
+    def next(self):
+        while True:
+            self._row_num += 1
+            line = self._file_ob.readline()
+            if not line:
+                raise StopIteration
+            if line.startswith("#"):
+                continue
+            return UGEAccountEntry(line)
+
+
+class UGEAccountEntry(object):
+    """
+    .. py:attribute:: qname
+
+        Name of the cluster queue in which the job has run.
+
+    .. py:attribute:: hostname
+
+        Name of the execution host.
+
+    .. py:attribute:: group
+
+        The effective group id of the job owner when executing the job.
+
+    .. py:attribute:: owner
+
+        Owner of the Univa Grid Engine job.
+
+    .. py:attribute:: job_name
+
+        Job name.
+
+    .. py:attribute:: job_number
+
+        Job identifier - job number.
+
+    .. py:attribute:: account
+
+        An account string as specified by the qsub(1) or qalter(1) -A option.
+
+    .. py:attribute:: priority
+
+        Priority value assigned to the job corresponding to the priority parameter in the queue configuration
+        (see queue_conf(5)).
+
+    .. py:attribute:: submission_time
+
+        Submission time (64bit GMT unix time stamp in milliseconds).
+
+    .. py:attribute:: start_time
+
+        Start time (64bit GMT unix time stamp in milliseconds).
+
+    .. py:attribute:: end_time
+
+        End time (64bit GMT unix time stamp in milliseconds).
+
+    .. py:attribute:: failed
+
+        Indicates  the  problem  which  occurred in case a job could not be started on the execution host (e.g. because
+        the owner of the job did not have a valid account on that machine). If Univa Grid Engine tries to start a
+        job multiple times, this may lead to multiple entries in the accounting file corresponding to the same job ID.
+
+    .. py:attribute:: exit_status
+
+        Exit status of the job script (or Univa Grid Engine specific status in case of certain error conditions).  The
+        exit status is determined by following  the  normal  shell conventions.   If  the  command terminates normally
+        the value of the command is its exit status.  However, in the case that the command exits abnormally, a value
+        of 0200 (octal), 128 (decimal) is added to the value of the command to make up the exit status.
+
+        For example: If a job dies through signal 9 (SIGKILL) then the exit status becomes 128 + 9 = 137.
+
+    .. py:attribute:: ru_wallclock
+
+        Difference between end_time and start_time (see above).
+
+    .. py:attribute:: ru_utime
+
+        User CPU time used.  This is the total amount of time spent executing in user mode.
+
+    .. py:attribute:: ru_stime
+
+        System CPU time used.  This is the total amount of time spent executing in kernel mode.
+
+    .. py:attribute:: ru_maxrss
+
+        Maximum resident set size.  This is the maximum resident set size used (in kilobytes).
+
+    .. py:attribute:: ru_ixrss
+
+        Integral shared memory size.  This field is currently unused on Linux.
+
+    .. py:attribute:: ru_ismrss
+
+        This field is currently unused on Linux.
+
+    .. py:attribute:: ru_idrss
+
+        Integral unshared data size.  This field is currently unused on Linux.
+
+    .. py:attribute:: ru_isrss
+
+        Integral unshared stack size.  This field is currently unused on Linux.
+
+    .. py:attribute:: ru_minflt
+
+        Page reclaims (soft page faults)  The number of page faults serviced without any I/O activity; here I/O
+        activity is avoided by "reclaiming" a page frame from the list of pages awaiting reallocation.
+
+    .. py:attribute:: ru_majflt
+
+        Page faults (hard page faults) The number of page faults serviced that required I/O activity.
+
+    .. py:attribute:: ru_nswap
+
+        Swaps.  This field is currently unused on Linux.
+
+    .. py:attribute:: ru_inblock
+
+        Block input operations.  The number of times the file system had to perform input.
+
+    .. py:attribute:: ru_oublock
+
+        Block output operations.  The number of times the file system had to perform output.
+
+    .. py:attribute:: ru_msgsnd
+
+        IPC messages sent.  This field is currently unused on Linux.
+
+    .. py:attribute:: ru_msgrcv
+
+        IPC messages received.  This field is currently unused on Linux.
+
+    .. py:attribute:: ru_nsignals
+
+        Signals received.  This field is currently unused on Linux.
+
+    .. py:attribute:: ru_nvcsw
+
+        Voluntary context switches.  The number of times a context switch resulted due to a process voluntarily giving
+        up the processor before its time slice was completed (usually to await availability of a resource).
+
+    .. py:attribute:: ru_nivcsw
+
+        The number of times a context switch resulted due to a higher priority process becoming runnable or because
+        the current process exceeded its time slice.
+
+    .. py:attribute:: project
+
+        The project which was assigned to the job.
+
+    .. py:attribute:: department
+
+        The department which was assigned to the job.
+
+    .. py:attribute:: granted_pe
+
+        The parallel environment which was selected for that job.
+
+    .. py:attribute:: slots
+
+        The number of slots which were dispatched to the job by the scheduler.
+
+    .. py:attribute:: task_number
+
+        Array job task index number.
+
+    .. py:attribute:: cpu
+
+        The cpu time usage in seconds.
+
+    .. py:attribute:: mem
+
+        The integral memory usage in Gbytes cpu seconds.
+
+    .. py:attribute:: io
+
+        The  amount  of data transferred in Gbytes.  On Linux data transferred means all bytes read and written by the
+        job through the read(), pread(), write() and pwrite() systems calls.
+
+    .. py:attribute:: category
+
+        A string specifying the job category.
+
+    .. py:attribute:: iow
+
+        The io wait time in seconds.
+
+    .. py:attribute:: pe_taskid
+
+        If this identifier is set the task was part of a parallel job and was passed to Univa Grid Engine via the
+        qrsh -inherit interface.
+
+    .. py:attribute:: maxvmem
+
+        The maximum vmem size in bytes.
+
+    .. py:attribute:: arid
+
+        Advance reservation identifier. If the job used resources of an advance reservation then this field contains a
+        positive integer identifier otherwise the value is "0" .
+
+    .. py:attribute:: ar_submission_time
+
+        If the job used resources of an advance reservation then this field contains the submission time (64bit GMT
+        unix time stamp in milliseconds) of the advance  reservation, otherwise the value is "0" .
+
+    .. py:attribute:: job_class
+
+        If the job has been running in a job class, the name of the job class, otherwise "NONE" .
+
+    .. py:attribute:: qdel_info
+
+        If  the job (the array task) has been deleted via qdel, "<username>@<hostname>", else "NONE".  If qdel was
+        called multiple times, every invocation is recorded in a comma separated list.
+
+    .. py:attribute:: maxrss
+
+        The maximum resident set size in bytes.
+
+    .. py:attribute:: maxpss
+
+        The maximum proportional set size in bytes.
+
+    .. py:attribute:: submit_host
+
+        The submit host name.
+
+    .. py:attribute:: cwd
+
+        The working directory the job ran in as specified with qsub / qalter switches -cwd and -wd.
+
+    .. py:attribute:: submit_cmd
+
+        The command line used for job submission.
+
+    """
+    def __init__(self, line):
+        fields = line.split(":")
+        if len(fields) != 52:
+            raise ValueError("Line contains invalid number of fields")
+
+        self.qname = fields.pop(0)
+        self.hostname = fields.pop(0)
+        self.group = fields.pop(0)
+        self.owner = fields.pop(0)
+        self.job_name = fields.pop(0)
+        self.job_number = int(fields.pop(0))
+        self.account = fields.pop(0)
+        self.priority = int(fields.pop(0))
+        self.submission_time = int(fields.pop(0))
+        self.submission_time_milliseconds = self.submission_time
+        self.submission_time = float(self.submission_time)/1000
+        self.start_time = int(fields.pop(0))
+        self.start_time_milliseconds = int(self.start_time)
+        self.start_time = float(self.start_time)/1000
+        self.end_time = int(fields.pop(0))
+        self.end_time_milliseconds = int(self.end_time)
+        self.end_time = float(self.end_time)/1000
+        self.failed = int(fields.pop(0))
+        self.exit_status = int(fields.pop(0))
+        self.ru_wallclock = fields.pop(0)
+        self.ru_wallclock_milliseconds = self.ru_wallclock
+        self.ru_wallclock = float(self.ru_wallclock) / 1000
+
+        self.ru_utime = float(fields.pop(0))
+        self.ru_stime = float(fields.pop(0))
+        self.ru_maxrss = float(fields.pop(0))
+        self.ru_ixrss = float(fields.pop(0))
+        self.ru_ismrss = float(fields.pop(0))
+        self.ru_idrss = float(fields.pop(0))
+        self.ru_isrss = float(fields.pop(0))
+        self.ru_minflt = float(fields.pop(0))
+        self.ru_majflt = float(fields.pop(0))
+        self.ru_nswap = float(fields.pop(0))
+        self.ru_inblock = float(fields.pop(0))
+        self.ru_oublock = float(fields.pop(0))
+        self.ru_msgsnd = float(fields.pop(0))
+        self.ru_msgrcv = float(fields.pop(0))
+        self.ru_nsignals = float(fields.pop(0))
+        self.ru_nvcsw = float(fields.pop(0))
+        self.ru_nivcsw = float(fields.pop(0))
+        self.project = fields.pop(0)
+        self.department = fields.pop(0)
+        self.granted_pe = fields.pop(0)
+        self.slots = int(fields.pop(0))
+        self.task_number = int(fields.pop(0))
+        self.cpu = float(fields.pop(0))
+        self.mem = float(fields.pop(0))
+        self.io = float(fields.pop(0))
+        self.category = fields.pop(0)
+        self.iow = float(fields.pop(0))
+        self.pe_taskid = fields.pop(0)
+        self.maxvmem = int(fields.pop(0))
+        self.arid = int(fields.pop(0))
+        self.ar_submission_time = int(fields.pop(0))
+        self.ar_submission_time_milliseconds = self.ar_submission_time
+        self.ar_submission_time = float(self.ar_submission_time) / 1000
+        self.job_class = fields.pop(0)
+        self.qdel_info = fields.pop(0)
+        self.maxrss = int(fields.pop(0))
+        self.maxpss = int(fields.pop(0))
+        self.submit_host = fields.pop(0)
+        self.cwd = fields.pop(0)
+        self.submit_cmd = fields.pop(0)
+        self.submit_cmd.replace("\255", ":")
+
+    def to_dict(self):
+        """
+        Returns a dictionary of the accounting file entry.
+
+        :return: Accounting entry as dictionary.
+        :rtype: dict
+        """
+        return self.__dict__
 
 class AccountEntry:
     def __init__(self, line):
